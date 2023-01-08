@@ -570,12 +570,12 @@ class RetrofitGenerator extends GeneratorForAnnotation<retrofit.RestApi> {
                   .assign(
                     refer('$_resultVar.data').conditionalIsNullIf(
                       thisNullable: returnType.isNullable,
-                      whenFalse: refer('await compute').call([
-                        refer(
-                          'deserialize${_displayString(innerReturnType)}List',
-                        ),
-                        refer('$_resultVar.data!.cast<Map<String,dynamic>>()')
-                      ]),
+                      whenFalse: refer('''
+                        await Executor().execute(
+                          arg1: $_resultVar.data!.cast<Map<String,dynamic>>(),
+                          fun1: (json, _) => json.map(${_displayString(innerReturnType)}.fromJson).toList(),
+                        )
+                      ''')
                     ),
                   )
                   .statement,
@@ -882,7 +882,7 @@ You should create a new class to encapsulate the response.
                 await Executor().execute(
                   arg1: $_resultVar.data! as Map<String, dynamic>,
                   fun1: (json, _) => ${_displayString(returnType)}.fromJson(json),
-                );
+                )
               ''');
               break;
           }
