@@ -878,9 +878,12 @@ You should create a new class to encapsulate the response.
               );
               break;
             case retrofit.Parser.FlutterCompute:
-              mapperCode = refer(
-                'await compute(deserialize${_displayString(returnType)}, $_resultVar.data!)',
-              );
+              mapperCode = refer('''
+                await Executor().execute(
+                  arg1: $_resultVar.data! as Map<String, dynamic>,
+                  fun1: (json, _) => ${_displayString(returnType)}.fromJson(json),
+                );
+              ''');
               break;
           }
           blocks.add(
