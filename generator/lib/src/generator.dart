@@ -21,8 +21,12 @@ class RetrofitOptions {
   RetrofitOptions({this.autoCastResponse, this.emptyRequestBody});
 
   RetrofitOptions.fromOptions([BuilderOptions? options])
-      : autoCastResponse = (options?.config['auto_cast_response']?.toString() ?? 'true') == 'true',
-        emptyRequestBody = (options?.config['empty_request_body']?.toString() ?? 'false') == 'true';
+      : autoCastResponse =
+            (options?.config['auto_cast_response']?.toString() ?? 'true') ==
+                'true',
+        emptyRequestBody =
+            (options?.config['empty_request_body']?.toString() ?? 'false') ==
+                'true';
 
   final bool? autoCastResponse;
   final bool? emptyRequestBody;
@@ -569,14 +573,12 @@ class RetrofitGenerator extends GeneratorForAnnotation<retrofit.RestApi> {
               declareVar(_valueVar)
                   .assign(
                     refer('$_resultVar.data').conditionalIsNullIf(
-                      thisNullable: returnType.isNullable,
-                      whenFalse: refer('''
-                        await Executor().execute(
-                          arg1: $_resultVar.data!.cast<Map<String,dynamic>>(),
-                          fun1: (json, _) => json.map(${_displayString(innerReturnType)}.fromJson).toList(),
+                        thisNullable: returnType.isNullable,
+                        whenFalse: refer('''
+                        await workerManager.execute(
+                          () => $_resultVar.data!.cast<Map<String,dynamic>>().map(${_displayString(innerReturnType)}.fromJson).toList(),
                         )
-                      ''')
-                    ),
+                      ''')),
                   )
                   .statement,
             );
@@ -879,9 +881,8 @@ You should create a new class to encapsulate the response.
               break;
             case retrofit.Parser.FlutterCompute:
               mapperCode = refer('''
-                await Executor().execute(
-                  arg1: $_resultVar.data! as Map<String, dynamic>,
-                  fun1: (json, _) => ${_displayString(returnType)}.fromJson(json),
+                await workerManager.execute(
+                  () => ${_displayString(returnType)}.fromJson($_resultVar.data! as Map<String, dynamic>),
                 )
               ''');
               break;
@@ -1870,11 +1871,15 @@ ${bodyName.displayName} == null
     /// There is no body
     if (globalOptions.emptyRequestBody == true) {
       blocks.add(
-        declareFinal(dataVar).assign(literalMap({}, refer('String'), refer('dynamic'))).statement,
+        declareFinal(dataVar)
+            .assign(literalMap({}, refer('String'), refer('dynamic')))
+            .statement,
       );
     } else {
       blocks.add(
-        declareFinal(dataVar, type: refer('Map<String, dynamic>?')).assign(literalNull).statement,
+        declareFinal(dataVar, type: refer('Map<String, dynamic>?'))
+            .assign(literalNull)
+            .statement,
       );
     }
   }
